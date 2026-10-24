@@ -1,0 +1,27 @@
+# Render Blueprint (untested template). Deploys the Dockerfile and a managed PostgreSQL database.
+services:
+  - type: web
+    name: nexus-ai
+    runtime: docker
+    plan: starter            # paid plan recommended: free instances sleep and drop in-flight tasks
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: nexus-db, property: connectionString }
+      - key: APP_ENV
+        value: production
+      - key: ACCESS_TOKEN
+        generateValue: true  # shown in the Render dashboard; paste it into the app's "Access token" prompt
+      - key: AI_API_KEY
+        sync: false          # you enter this in the dashboard
+      - key: AI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: AI_MODEL
+        value: gpt-4o-mini
+      - key: DEMO_MODE
+        value: auto
+      - key: SEARCH_API_KEY
+        sync: false
+databases:
+  - name: nexus-db
+    plan: basic-256mb

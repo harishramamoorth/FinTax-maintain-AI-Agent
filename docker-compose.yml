@@ -1,0 +1,39 @@
+# docker compose up --build   ->  http://localhost:8000
+# Local deployment scaffold only; production use requires the controls in docs/DEPLOYMENT.md.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fintax
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a strong POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: fintax
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fintax -d fintax"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: "postgresql://fintax:${POSTGRES_PASSWORD:?Set a strong POSTGRES_PASSWORD in .env}@db:5432/fintax"
+      DOCUMENT_STORAGE_DIR: /app/data/documents
+      APP_ENV: production
+    ports:
+      - "8000:8000"
+    volumes:
+      - fintax_documents:/app/data/documents
+
+volumes:
+  pgdata:
+  fintax_documents:
